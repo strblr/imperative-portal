@@ -1,6 +1,6 @@
 {
   "name": "imperative-portal",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Render react nodes imperatively",
   "type": "module",
   "main": "dist/index.js",
@@ -11,6 +11,23 @@
       "default": "./dist/index.js"
     }
   },
+  "keywords": [
+    "react",
+    "imperative",
+    "portal",
+    "promise",
+    "zustand",
+    "confirm",
+    "dialog"
+  ],
+  "author": "strblr",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/strblr/imperative-portal"
+  },
+  "homepage": "https://github.com/strblr/imperative-portal",
+  "bugs": "https://github.com/strblr/imperative-portal/issues",
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "bun run build"
