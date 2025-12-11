@@ -2,18 +2,95 @@ import {
   createElement,
   createContext,
   useContext,
-  type ReactNode,
-  type ReactElement
+  type ReactNode
 } from "react";
 import { create } from "zustand";
 import { uniqueId } from "./unique-id";
-import { elementKey } from "./element-key";
+
+export interface ImperativeNode<T> {
+  key: string;
+  node: ReactNode;
+  promise: ImperativeNodePromise<T>;
+}
 
 export interface ImperativeNodePromise<T> extends Promise<T> {
   settled: boolean;
   resolve: (value: T) => void;
   reject: (reason?: any) => void;
   update: (node: ReactNode) => void;
+}
+
+// createImperativePortal
+
+export function createImperativePortal() {
+  const useStore = create(() => ({
+    nodes: [] as ImperativeNode<any>[]
+  }));
+
+  const useImperativePortal = () => {
+    return useStore(store => store.nodes);
+  };
+
+  const ImperativePortal = ({
+    wrap = nodes => nodes
+  }: {
+    wrap?: (nodes: ReactNode[]) => ReactNode;
+  }) => {
+    const nodes = useImperativePortal();
+    return wrap(nodes.map(n => n.node));
+  };
+
+  const show = <T = void>(node: ReactNode): ImperativeNodePromise<T> => {
+    const key = uniqueId();
+    const handlers = Promise.withResolvers<T>();
+
+    const createNode = (node: ReactNode) => {
+      const provider = createElement(
+        ImperativeNodeContext.Provider,
+        { key, value: promise },
+        node
+      );
+      return { key, node: provider, promise };
+    };
+
+    const resolve = (value: T) => {
+      handlers.resolve(value);
+      settle();
+    };
+
+    const reject = (reason?: any) => {
+      handlers.reject(reason);
+      settle();
+    };
+
+    const settle = () => {
+      useStore.setState(({ nodes }) => ({
+        nodes: nodes.filter(n => n.key !== key)
+      }));
+      promise.settled = true;
+    };
+
+    const update = (node: ReactNode) => {
+      useStore.setState(({ nodes }) => ({
+        nodes: nodes.map(n => (n.key === key ? createNode(node) : n))
+      }));
+    };
+
+    const promise = Object.assign(handlers.promise, {
+      settled: false,
+      resolve,
+      reject,
+      update
+    });
+
+    useStore.setState(({ nodes }) => ({
+      nodes: [...nodes, createNode(node)]
+    }));
+
+    return promise;
+  };
+
+  return [ImperativePortal, show, useImperativePortal] as const;
 }
 
 // Context
@@ -32,71 +109,8 @@ export function useImperativeNode<T = void>(): ImperativeNodePromise<T> {
   return context;
 }
 
-// createImperativePortal
-
-export function createImperativePortal() {
-  const useStore = create(() => ({ nodes: [] as ReactElement[] }));
-
-  const ImperativePortal = ({
-    wrap = nodes => nodes
-  }: {
-    wrap?: (nodes: ReactNode) => ReactNode;
-  }) => wrap(useStore(store => store.nodes));
-
-  const show = <T = void>(node: ReactNode): ImperativeNodePromise<T> => {
-    const key = uniqueId();
-    const handlers = Promise.withResolvers<T>();
-
-    const render = (node: ReactNode) => {
-      return createElement(
-        ImperativeNodeContext.Provider,
-        { key, value: promise },
-        node
-      );
-    };
-
-    const resolve = (value: T) => {
-      handlers.resolve(value);
-      settle();
-    };
-
-    const reject = (reason?: any) => {
-      handlers.reject(reason);
-      settle();
-    };
-
-    const settle = () => {
-      useStore.setState(({ nodes }) => ({
-        nodes: nodes.filter(n => elementKey(n) !== key)
-      }));
-      promise.settled = true;
-    };
-
-    const update = (node: ReactNode) => {
-      useStore.setState(({ nodes }) => ({
-        nodes: nodes.map(n => (elementKey(n) === key ? render(node) : n))
-      }));
-    };
-
-    const promise = Object.assign(handlers.promise, {
-      settled: false,
-      resolve,
-      reject,
-      update
-    });
-
-    useStore.setState(({ nodes }) => ({
-      nodes: [...nodes, render(node)]
-    }));
-
-    return promise;
-  };
-
-  return [ImperativePortal, show] as const;
-}
-
 // Default instance
 
-const [ImperativePortal, show] = createImperativePortal();
+const [ImperativePortal, show, useImperativePortal] = createImperativePortal();
 
-export { ImperativePortal, show };
+export { ImperativePortal, show, useImperativePortal };

@@ -1,5 +1,5 @@
 let counter = 0;
 
 export function uniqueId() {
-  return (counter++).toString(36);
+  return "imperative-node-" + (counter++).toString(36);
 }

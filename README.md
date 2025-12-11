@@ -20,7 +20,7 @@ Traditional approaches often involve:
 - Managing local or global state for UI visibility
 - Using complex portal-based setups
 
-`imperative-portal` simplifies this by providing a clean API to render React nodes imperatively.
+`imperative-portal` simplifies this by providing a clean API where you think of React nodes as promises.
 
 ## Installation
 
@@ -230,9 +230,7 @@ if (promise.settled) {
 
 ### Wrap prop
 
-The `ImperativePortal` component accepts an optional `wrap` prop that allows you to wrap all rendered imperative nodes with additional JSX.
-
-**Note**: Internally, the nodes are created properly keyed, with a unique key generated per call to `show()`, so there is no point in manually adding a key to what is passed to `show()`.
+The `ImperativePortal` component accepts an optional `wrap` prop that allows you to wrap active imperative nodes with custom JSX. Useful for basic customization.
 
 ```tsx
 import { AnimatePresence } from "motion/react";
@@ -245,6 +243,53 @@ function App() {
   );
 }
 ```
+
+### Advanced customization
+
+For more advanced rendering scenarios that require access to individual node keys, promises or elements, use the `useImperativePortal` hook to create a custom imperative portal component:
+
+```tsx
+import { useImperativePortal } from "imperative-portal";
+import { AnimatePresence, motion } from "motion/react";
+
+function ImperativePortal() {
+  const nodes = useImperativePortal();
+  return (
+    <AnimatePresence>
+      {nodes.length > 0 && (
+        <motion.div
+          key="backdrop"
+          className="fixed inset-0 bg-black/50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => nodes.forEach(n => n.promise.reject())}
+        />
+      )}
+      {nodes.map((n, i) => (
+        <motion.div
+          key={n.key}
+          initial={{ opacity: 0, scale: 0.8, y: 20 + i * 10 }}
+          animate={{ opacity: 1, scale: 1, y: i * 10 }}
+          exit={{ opacity: 0, scale: 0.8, y: 20 + i * 10 }}
+        >
+          {n.node}
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  return (
+    <div>
+      <ImperativePortal />
+    </div>
+  );
+}
+```
+
+**Note**: When wrapping individual nodes like in this example, make sure to include the `key={n.key}` prop on your wrapper element for proper React reconciliation.
 
 ## Multiple portal systems
 
@@ -271,21 +316,27 @@ showToast(<MyToast />);
 
 ## API reference
 
-### Function `createImperativePortal()`
-
-Creates a new imperative portal system with its own store and rendering context. Returns an `[ImperativePortal, show]` tuple.
-
 ### Component `ImperativePortal`
 
-A React component that renders all active imperative nodes. Typically placed near the root of your app. Takes an optional `wrap` prop.
+A React component that renders all active imperative nodes. Typically placed near the root of your app. Takes an optional `wrap` prop for basic customization.
 
 ### Function `show<T>(node: ReactNode): ImperativeNodePromise<T>`
 
 Renders a React node imperatively and returns a promise that tracks and controls the lifecycle of the node.
 
+### Hook `useImperativePortal(): ImperativeNode<any>[]`
+
+A React hook that returns the array of all active imperative nodes in the portal system. Each node is an object containing `key`, `node` (the React node to render), and `promise` properties. Useful for advanced customization.
+
 ### Hook `useImperativeNode<T>(): ImperativeNodePromise<T>`
 
 A React hook that provides access to the imperative portal promise from within a rendered imperative node. Must be used within components that are rendered via the `show` function. Enables self-contained imperative components that can control their own lifecycle.
+
+### Function `createImperativePortal()`
+
+Creates a new imperative portal system with its own store. Returns a `[ImperativePortal, show, useImperativePortal]` tuple.
+
+## Types
 
 ### Interface `ImperativeNodePromise<T>`
 
@@ -295,3 +346,9 @@ Extends `Promise<T>` with additional properties:
 - `resolve(value: T): void` - Resolves the promise, unmounts the node.
 - `reject(reason?: any): void` - Rejects the promise, unmounts the node.
 - `update(node: ReactNode): void` - Updates the node.
+
+### Interface `ImperativeNode<T>`
+
+- `key: string` - A unique identifier for the node, used for React reconciliation.
+- `node: ReactNode` - The rendered React node.
+- `promise: ImperativeNodePromise<T>` - The promise that controls the node's lifecycle.
