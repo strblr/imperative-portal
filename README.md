@@ -64,7 +64,9 @@ const promise = show(
   </div>
 );
 
-await promise; // Resolved when "Close" is clicked
+setTimeout(() => promise.resolve(), 5000)
+
+await promise; // Resolved when "Close" is clicked, or 5 seconds have passed
 ```
 
 Calling `promise.resolve` or `promise.reject` settles the promise and **unmounts the node**.
@@ -108,7 +110,7 @@ For components that need to control their lifecycle from within, you can use clo
 Using props:
 
 ```tsx
-import { useImperativeNode } from "imperative-portal";
+import { show, useImperativeNode } from "imperative-portal";
 
 function SelfManagedDialog() {
   const promise = useImperativeNode();
