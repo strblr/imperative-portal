@@ -64,6 +64,7 @@ export function createImperativePortal() {
     };
 
     const settle = () => {
+      if (promise.settled) return;
       useStore.setState(({ nodes }) => ({
         nodes: nodes.filter(n => n.key !== key)
       }));
