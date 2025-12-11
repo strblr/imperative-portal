@@ -2,6 +2,26 @@
 
 A React library for rendering components imperatively with promise-based control. Perfect for modals, dialogs, notifications, and any UI that needs programmatic lifecycle management.
 
+## Motivation
+
+React encourages declarative UI patterns, but sometimes you want to render components imperatively - triggered by user actions, API calls, or other side effects that wouldn't fit nicely into your component tree without heavy boilerplate.
+
+Common use cases include:
+
+- Modals and dialogs that need to be shown programmatically
+- Toast notifications and alerts
+- Confirmation dialogs
+- Input dialogs
+- Loading spinners or progress indicators
+- Any UI that appears/disappears based on imperative logic
+
+Traditional approaches often involve:
+
+- Managing local or global state for UI visibility
+- Using complex portal-based setups
+
+`imperative-portal` simplifies this by providing a clean API to render React nodes imperatively.
+
 ## Installation
 
 ```bash
@@ -18,6 +38,8 @@ import { ImperativePortal } from "imperative-portal";
 
 Add the `<ImperativePortal />` element in your app, where you want your imperative nodes to be rendered. Typically near the root or even in a regular [portal](https://react.dev/reference/react-dom/createPortal), but it's up to you.
 
+**Note**: If you need some React contexts inside the imperative nodes, put `<ImperativePortal />` as a descendant of their providers.
+
 ```tsx
 function App() {
   return (
@@ -27,8 +49,6 @@ function App() {
   );
 }
 ```
-
-**Note**: If you need some React contexts inside the imperative nodes, put `<ImperativePortal />` as a descendant of their providers.
 
 ## Basic example
 
@@ -159,9 +179,7 @@ try {
 }
 ```
 
-## Advanced features
-
-### Updating node
+## Node update
 
 You can update the rendered node while it's still mounted:
 
@@ -174,6 +192,30 @@ promise.update(<div>Done!</div>);
 // Close it
 promise.resolve();
 ```
+
+You can also use a render function for dynamic content:
+
+```tsx
+const renderProgress = (value: number) => (
+  <div>
+    <div>Progress: {value}%</div>
+    <progress value={value} max={100} />
+  </div>
+);
+
+const promise = show(renderProgress(0));
+
+// Later, update with new progress value
+promise.update(renderProgress(50));
+
+// Complete the progress
+promise.update(renderProgress(100));
+
+// Close it
+promise.resolve();
+```
+
+## Advanced features
 
 ### Checking settlement status
 
@@ -189,6 +231,8 @@ if (promise.settled) {
 ### Wrap prop
 
 The `ImperativePortal` component accepts an optional `wrap` prop that allows you to wrap all rendered imperative nodes with additional JSX.
+
+**Note**: Internally, the nodes are created properly keyed, with a unique key generated per call to `show()`, so there is no point in manually adding a key to what is passed to `show()`.
 
 ```tsx
 import { AnimatePresence } from "motion/react";
