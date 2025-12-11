@@ -2,7 +2,8 @@ import {
   createElement,
   createContext,
   useContext,
-  type ReactNode
+  type ReactNode,
+  type FunctionComponent
 } from "react";
 import { create } from "zustand";
 import { uniqueId } from "./unique-id";
@@ -31,11 +32,9 @@ export function createImperativePortal() {
     return useStore(store => store.nodes);
   };
 
-  const ImperativePortal = ({
-    wrap = nodes => nodes
-  }: {
+  const ImperativePortal: FunctionComponent<{
     wrap?: (nodes: ReactNode[]) => ReactNode;
-  }) => {
+  }> = ({ wrap = nodes => nodes }) => {
     const nodes = useImperativePortal();
     return wrap(nodes.map(n => n.node));
   };

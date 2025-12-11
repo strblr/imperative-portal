@@ -224,7 +224,7 @@ promise.resolve();
 ```tsx
 const promise = show(<MyComponent />);
 
-// Check if the portal has been closed
+// Check if the node has been closed
 if (promise.settled) {
   console.log("Portal is closed");
 }
@@ -300,8 +300,8 @@ Use `createImperativePortal` to create isolated portal systems that can be mount
 ```tsx
 import { createImperativePortal } from "imperative-portal";
 
-const [ModalPortal, showModal] = createImperativePortal();
-const [ToastPortal, showToast] = createImperativePortal();
+const [ModalPortal, showModal, useModalPortal] = createImperativePortal();
+const [ToastPortal, showToast, useToastPortal] = createImperativePortal();
 
 function App() {
   return (
@@ -328,19 +328,19 @@ Renders a React node imperatively and returns a promise that tracks and controls
 
 ### Hook `useImperativePortal(): ImperativeNode<any>[]`
 
-A React hook that returns the array of all active imperative nodes in the portal system. Each node is an object containing `key`, `node` (the React node to render), and `promise` properties. Useful for advanced customization.
+A React hook that returns the array of all active imperative nodes in the portal system. Each node is an object containing `key`, `node` (the React node), and `promise` properties. Useful for advanced customization.
 
 ### Hook `useImperativeNode<T>(): ImperativeNodePromise<T>`
 
-A React hook that provides access to the imperative portal promise from within a rendered imperative node. Must be used within components that are rendered via the `show` function. Enables self-contained imperative components that can control their own lifecycle.
+A React hook that provides access to the imperative portal promise from **within** a rendered imperative node. Must be used within components that are rendered via the `show` function. Enables self-contained imperative components that can control their own lifecycle.
 
 ### Function `createImperativePortal()`
 
-Creates a new imperative portal system with its own store. Returns a `[ImperativePortal, show, useImperativePortal]` tuple.
+Creates a new imperative portal system with its own store. Returns an `[ImperativePortal, show, useImperativePortal]` tuple.
 
 ## Types
 
-### Interface `ImperativeNodePromise<T>`
+### `ImperativeNodePromise<T>`
 
 Extends `Promise<T>` with additional properties:
 
@@ -349,8 +349,8 @@ Extends `Promise<T>` with additional properties:
 - `reject(reason?: any): void` - Rejects the promise, unmounts the node.
 - `update(node: ReactNode): void` - Updates the node.
 
-### Interface `ImperativeNode<T>`
+### `ImperativeNode<T>`
 
 - `key: string` - A unique identifier for the node, used for React reconciliation.
-- `node: ReactNode` - The rendered React node.
+- `node: ReactNode` - The React node.
 - `promise: ImperativeNodePromise<T>` - The promise that controls the node's lifecycle.
