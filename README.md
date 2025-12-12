@@ -67,16 +67,16 @@ function App() {
 
 ## Basic example
 
-Open any React node programmatically:
+Open any React node programmatically by passing it to `show`:
 
 ```typescript
 import { show } from "imperative-portal"
 
 const promise = show(
-  <div>
+  <Toast>
     <h2>Hello World!</h2>
     <button onClick={() => promise.resolve()}>Close</button>
-  </div>
+  </Toast>
 );
 
 setTimeout(() => promise.resolve(), 5000)
@@ -84,7 +84,18 @@ setTimeout(() => promise.resolve(), 5000)
 await promise; // Resolved when "Close" is clicked, or 5 seconds have passed
 ```
 
+`show` returns a promise that tracks and controls the lifecycle of the node.
 Calling `promise.resolve` or `promise.reject` settles the promise and **unmounts the node**.
+
+You can also pass a factory function:
+
+```tsx
+show(promise => (
+  <Toast>
+    <button onClick={() => promise.resolve()}>Close</button>
+  </Toast>
+));
+```
 
 ## Confirm dialog example
 
@@ -92,7 +103,7 @@ You can get back data from the imperative node via the promise:
 
 ```tsx
 function confirm(message: string) {
-  const promise = show<boolean>(
+  return show<boolean>(promise => (
     <Dialog open onOpenChange={open => !open && promise.resolve(false)}>
       <DialogContent>
         <DialogHeader>
@@ -107,8 +118,7 @@ function confirm(message: string) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-  return promise;
+  ));
 }
 
 if (await confirm("Delete this item?")) {
@@ -120,9 +130,7 @@ if (await confirm("Delete this item?")) {
 
 ## useImperativePromise hook
 
-For components that need to control their lifecycle from within, you can use closures through props as shown above, but simpler would be to use the `useImperativePromise` hook:
-
-Using props:
+For components that need to control their lifecycle from within, you can use closures and props as shown above, or pass the promise directly as prop, but simpler would be to use the `useImperativePromise` hook:
 
 ```tsx
 import { show, useImperativePromise } from "imperative-portal";
@@ -232,6 +240,17 @@ promise.update(renderProgress(100));
 promise.resolve();
 ```
 
+Like `show`, `update` can also accept a factory:
+
+```tsx
+const promise = show(<div>Loading...</div>);
+
+// Update with access to the promise
+promise.update(promise => (
+  <button onClick={() => promise.resolve()}>Done!</button>
+));
+```
+
 ## Advanced features
 
 ### Checking settlement status
@@ -269,7 +288,7 @@ For more advanced rendering scenarios that require access to individual node key
 import { useImperativePortal } from "imperative-portal";
 import { AnimatePresence, motion } from "motion/react";
 
-function ImperativePortal() {
+function CustomImperativePortal() {
   const nodes = useImperativePortal();
   return (
     <AnimatePresence>
@@ -300,7 +319,7 @@ function ImperativePortal() {
 function App() {
   return (
     <div>
-      <ImperativePortal />
+      <CustomImperativePortal />
     </div>
   );
 }
@@ -337,9 +356,9 @@ showToast(<MyToast />);
 
 A React component that renders all active imperative nodes. Typically placed near the root of your app. Takes an optional `wrap` prop for basic customization.
 
-### Function `show<T>(node: ReactNode): ImperativePromise<T>`
+### Function `show<T>(node: ReactNodeOrFactory<T>): ImperativePromise<T>`
 
-Renders a React node imperatively and returns a promise that tracks and controls the lifecycle of the node.
+Renders a React node imperatively and returns a promise that tracks and controls the lifecycle of the node. You can pass either a React node directly or a function that receives the imperative promise and returns a React node.
 
 ### Hook `useImperativePortal(): ImperativeNode<any>[]`
 
@@ -362,10 +381,20 @@ Extends `Promise<T>` with additional properties:
 - `settled: boolean` - Whether the promise has been resolved or rejected.
 - `resolve(value: T): void` - Resolves the promise, unmounts the node.
 - `reject(reason?: any): void` - Rejects the promise, unmounts the node.
-- `update(node: ReactNode): void` - Updates the node.
+- `update(node: ReactNodeOrFactory<T>): void` - Updates the node. You can pass either a React node directly or a function that receives the imperative promise and returns a React node.
 
 ### `ImperativeNode<T>`
 
 - `key: string` - A unique identifier for the node, used for React reconciliation.
 - `node: ReactNode` - The React node.
 - `promise: ImperativePromise<T>` - The promise that controls the node's lifecycle.
+
+### `ReactNodeOrFactory<T>`
+
+A React node or a function that receives an imperative promise and returns a React node:
+
+```typescript
+type ReactNodeOrFactory<T> =
+  | ReactNode
+  | ((promise: ImperativePromise<T>) => ReactNode);
+```

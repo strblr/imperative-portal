@@ -18,8 +18,12 @@ export interface ImperativePromise<T> extends Promise<T> {
   settled: boolean;
   resolve: (value: T) => void;
   reject: (reason?: any) => void;
-  update: (node: ReactNode) => void;
+  update: (node: ReactNodeOrFactory<T>) => void;
 }
+
+export type ReactNodeOrFactory<T> =
+  | ReactNode
+  | ((promise: ImperativePromise<T>) => ReactNode);
 
 // createImperativePortal
 
@@ -35,15 +39,17 @@ export function createImperativePortal() {
     return wrap(nodes.map(n => n.node));
   };
 
-  const show = <T = void>(node: ReactNode): ImperativePromise<T> => {
+  const show = <T = void>(
+    node: ReactNodeOrFactory<T>
+  ): ImperativePromise<T> => {
     const key = uniqueId();
     const handlers = Promise.withResolvers<T>();
 
-    const createNode = (node: ReactNode) => {
+    const createNode = (node: ReactNodeOrFactory<T>) => {
       const provider = createElement(
         ImperativePromiseContext.Provider,
         { key, value: promise },
-        node
+        typeof node === "function" ? node(promise) : node
       );
       return { key, node: provider, promise };
     };
@@ -64,7 +70,7 @@ export function createImperativePortal() {
       promise.settled = true;
     };
 
-    const update = (node: ReactNode) => {
+    const update = (node: ReactNodeOrFactory<T>) => {
       store.set(nodes =>
         nodes.map(n => (n.key === key ? createNode(node) : n))
       );
