@@ -87,7 +87,7 @@ await promise; // Resolved when "Close" is clicked, or 5 seconds have passed
 `show` returns a promise that tracks and controls the lifecycle of the node.
 Calling `promise.resolve` or `promise.reject` settles the promise and **unmounts the node**.
 
-You can also pass a factory function:
+You can also pass a node factory:
 
 ```tsx
 show(promise => (
@@ -218,7 +218,7 @@ promise.update(<div>Done!</div>);
 promise.resolve();
 ```
 
-You can also use a render function for dynamic content:
+You can use the render function pattern for dynamic content:
 
 ```tsx
 const renderProgress = (value: number) => (
@@ -240,12 +240,11 @@ promise.update(renderProgress(100));
 promise.resolve();
 ```
 
-Like `show`, `update` can also accept a factory:
+Like `show`, `update` can also accept a node factory:
 
 ```tsx
 const promise = show(<div>Loading...</div>);
 
-// Update with access to the promise
 promise.update(promise => (
   <button onClick={() => promise.resolve()}>Done!</button>
 ));
