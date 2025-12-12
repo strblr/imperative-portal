@@ -5,7 +5,7 @@ import {
   type ReactNode,
   type FunctionComponent
 } from "react";
-import { create } from "zustand";
+import { createStore } from "./store";
 import { uniqueId } from "./unique-id";
 
 export interface ImperativeNode<T> {
@@ -24,13 +24,9 @@ export interface ImperativePromise<T> extends Promise<T> {
 // createImperativePortal
 
 export function createImperativePortal() {
-  const useStore = create(() => ({
-    nodes: [] as ImperativeNode<any>[]
-  }));
+  const store = createStore<ImperativeNode<any>[]>([]);
 
-  const useImperativePortal = () => {
-    return useStore(store => store.nodes);
-  };
+  const useImperativePortal = store.use;
 
   const ImperativePortal: FunctionComponent<{
     wrap?: (nodes: ReactNode[]) => ReactNode;
@@ -64,16 +60,14 @@ export function createImperativePortal() {
 
     const settle = () => {
       if (promise.settled) return;
-      useStore.setState(({ nodes }) => ({
-        nodes: nodes.filter(n => n.key !== key)
-      }));
+      store.set(nodes => nodes.filter(n => n.key !== key));
       promise.settled = true;
     };
 
     const update = (node: ReactNode) => {
-      useStore.setState(({ nodes }) => ({
-        nodes: nodes.map(n => (n.key === key ? createNode(node) : n))
-      }));
+      store.set(nodes =>
+        nodes.map(n => (n.key === key ? createNode(node) : n))
+      );
     };
 
     const promise = Object.assign(handlers.promise, {
@@ -83,10 +77,7 @@ export function createImperativePortal() {
       update
     });
 
-    useStore.setState(({ nodes }) => ({
-      nodes: [...nodes, createNode(node)]
-    }));
-
+    store.set(nodes => [...nodes, createNode(node)]);
     return promise;
   };
 

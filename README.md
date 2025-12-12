@@ -1,6 +1,23 @@
 # imperative-portal
 
-A React library for rendering components imperatively with promise-based control. Perfect for modals, dialogs, notifications, and any UI that needs programmatic lifecycle management.
+A lightweight React library for rendering components imperatively with promise-based control. Perfect for modals, dialogs, notifications, and any UI that needs programmatic lifecycle management.
+
+## Table of Contents
+
+- [Motivation](#motivation)
+- [Setup](#setup)
+- [Basic example](#basic-example)
+- [Confirm dialog example](#confirm-dialog-example)
+- [useImperativePromise hook](#useimperativepromise-hook)
+- [Input dialog example](#input-dialog-example)
+- [Node update](#node-update)
+- [Advanced features](#advanced-features)
+  - [Checking settlement status](#checking-settlement-status)
+  - [Wrap prop](#wrap-prop)
+  - [Advanced customization](#advanced-customization)
+- [Multiple portal systems](#multiple-portal-systems)
+- [API reference](#api-reference)
+- [Types](#types)
 
 ## Motivation
 
@@ -22,13 +39,11 @@ Traditional approaches often involve:
 
 `imperative-portal` simplifies this by providing a clean API where you think of React nodes as promises.
 
-## Installation
+## Setup
 
 ```bash
 npm install imperative-portal
 ```
-
-## Setup
 
 Import the root component:
 
