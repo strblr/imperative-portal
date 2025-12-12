@@ -26,9 +26,5 @@ export function createStore<T>(initialState: T) {
     return useSyncExternalStore(subscribe, get, getInitial);
   };
 
-  return {
-    get,
-    set,
-    use
-  };
+  return { get, set, use };
 }
