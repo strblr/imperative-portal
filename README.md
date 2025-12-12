@@ -103,17 +103,17 @@ if (await confirm("Delete this item?")) {
 }
 ```
 
-## useImperativeNode hook
+## useImperativePromise hook
 
-For components that need to control their lifecycle from within, you can use closures through props as shown above, but simpler would be to use the `useImperativeNode` hook:
+For components that need to control their lifecycle from within, you can use closures through props as shown above, but simpler would be to use the `useImperativePromise` hook:
 
 Using props:
 
 ```tsx
-import { show, useImperativeNode } from "imperative-portal";
+import { show, useImperativePromise } from "imperative-portal";
 
 function SelfManagedDialog() {
-  const promise = useImperativeNode();
+  const promise = useImperativePromise();
   return (
     <Dialog open onOpenChange={open => !open && promise.reject()}>
       <DialogContent>
@@ -147,7 +147,7 @@ Here's an advanced example that captures user input from a text field:
 
 ```tsx
 function NamePromptDialog() {
-  const promise = useImperativeNode<string>();
+  const promise = useImperativePromise<string>();
   const [name, setName] = useState("");
   return (
     <Dialog open onOpenChange={open => !open && promise.reject()}>
@@ -322,7 +322,7 @@ showToast(<MyToast />);
 
 A React component that renders all active imperative nodes. Typically placed near the root of your app. Takes an optional `wrap` prop for basic customization.
 
-### Function `show<T>(node: ReactNode): ImperativeNodePromise<T>`
+### Function `show<T>(node: ReactNode): ImperativePromise<T>`
 
 Renders a React node imperatively and returns a promise that tracks and controls the lifecycle of the node.
 
@@ -330,7 +330,7 @@ Renders a React node imperatively and returns a promise that tracks and controls
 
 A React hook that returns the array of all active imperative nodes in the portal system. Each node is an object containing `key`, `node` (the React node), and `promise` properties. Useful for advanced customization.
 
-### Hook `useImperativeNode<T>(): ImperativeNodePromise<T>`
+### Hook `useImperativePromise<T>(): ImperativePromise<T>`
 
 A React hook that provides access to the imperative portal promise from **within** a rendered imperative node. Must be used within components that are rendered via the `show` function. Enables self-contained imperative components that can control their own lifecycle.
 
@@ -340,7 +340,7 @@ Creates a new imperative portal system with its own store. Returns an `[Imperati
 
 ## Types
 
-### `ImperativeNodePromise<T>`
+### `ImperativePromise<T>`
 
 Extends `Promise<T>` with additional properties:
 
@@ -353,4 +353,4 @@ Extends `Promise<T>` with additional properties:
 
 - `key: string` - A unique identifier for the node, used for React reconciliation.
 - `node: ReactNode` - The React node.
-- `promise: ImperativeNodePromise<T>` - The promise that controls the node's lifecycle.
+- `promise: ImperativePromise<T>` - The promise that controls the node's lifecycle.

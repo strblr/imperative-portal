@@ -11,10 +11,10 @@ import { uniqueId } from "./unique-id";
 export interface ImperativeNode<T> {
   key: string;
   node: ReactNode;
-  promise: ImperativeNodePromise<T>;
+  promise: ImperativePromise<T>;
 }
 
-export interface ImperativeNodePromise<T> extends Promise<T> {
+export interface ImperativePromise<T> extends Promise<T> {
   settled: boolean;
   resolve: (value: T) => void;
   reject: (reason?: any) => void;
@@ -39,13 +39,13 @@ export function createImperativePortal() {
     return wrap(nodes.map(n => n.node));
   };
 
-  const show = <T = void>(node: ReactNode): ImperativeNodePromise<T> => {
+  const show = <T = void>(node: ReactNode): ImperativePromise<T> => {
     const key = uniqueId();
     const handlers = Promise.withResolvers<T>();
 
     const createNode = (node: ReactNode) => {
       const provider = createElement(
-        ImperativeNodeContext.Provider,
+        ImperativePromiseContext.Provider,
         { key, value: promise },
         node
       );
@@ -95,15 +95,15 @@ export function createImperativePortal() {
 
 // Context
 
-const ImperativeNodeContext = createContext<ImperativeNodePromise<any> | null>(
+const ImperativePromiseContext = createContext<ImperativePromise<any> | null>(
   null
 );
 
-export function useImperativeNode<T = void>(): ImperativeNodePromise<T> {
-  const context = useContext(ImperativeNodeContext);
+export function useImperativePromise<T = void>(): ImperativePromise<T> {
+  const context = useContext(ImperativePromiseContext);
   if (!context) {
     throw new Error(
-      "useImperativeNode must be used within an imperative portal"
+      "useImperativePromise must be used within an imperative portal"
     );
   }
   return context;
